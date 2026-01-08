@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Scope } from '@nestjs/common';
 
 export interface User {
   id: number;
@@ -6,6 +6,9 @@ export interface User {
   email: string;
 }
 
+// @Injectable({ scope: Scope.REQUEST }) // 请求级别，每个请求创建一个实例
+// @Injectable({ scope: Scope.TRANSIENT }) // 瞬态级别，每次注入都创建新实例
+// @Injectable({ scope: Scope.DEFAULT }) // 标记为可注入的服务，默认作用域为请求作用域
 @Injectable() // 标记为可注入的服务
 export class UserService {
   private users: User[] = [
@@ -30,5 +33,27 @@ export class UserService {
     console.log(newUser);
     this.users.push(newUser);
     return newUser;
+  }
+
+  update(id: number, user: Omit<User, 'id'>): User {
+    const index = this.users.findIndex((user) => user.id === id);
+    if (index === -1) {
+      throw new Error(`User with ID ${id} not found`);
+    }
+    const updatedUser: User = {
+      id,
+      ...user,
+    };
+    this.users[index] = updatedUser;
+    return updatedUser;
+  }
+
+  remove(id: number): boolean {
+    const index = this.users.findIndex((user) => user.id === id);
+    if (index === -1) {
+      return false;
+    }
+    this.users.splice(index, 1);
+    return true;
   }
 }
