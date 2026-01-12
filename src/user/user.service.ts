@@ -1,59 +1,51 @@
 import { Injectable, Scope } from '@nestjs/common';
-
-export interface User {
-  id: number;
-  name: string;
-  email: string;
-}
+import { InjectModel } from '@nestjs/mongoose';
+import { Model } from 'mongoose';
+import { User } from './schemas/user.schema';
+import { CreateUserDto } from './dto/create-user.dto';
 
 // @Injectable({ scope: Scope.REQUEST }) // 请求级别，每个请求创建一个实例
 // @Injectable({ scope: Scope.TRANSIENT }) // 瞬态级别，每次注入都创建新实例
 // @Injectable({ scope: Scope.DEFAULT }) // 标记为可注入的服务，默认作用域为请求作用域
 @Injectable() // 标记为可注入的服务
 export class UserService {
-  private users: User[] = [
-    { id: 1, name: 'John Doe', email: 'john@example.com' },
-    { id: 2, name: 'Jane Doe', email: 'jane@example.com' },
-    { id: 3, name: 'Bob Smith', email: 'bob@example.com' },
-  ];
+  constructor(@InjectModel(User.name) private userModel: Model<User>) {}
 
-  findAll(): User[] {
-    return this.users;
+  // 查询所有文档
+  findAll(): Promise<User[]> {
+    return this.userModel.find().exec();
   }
 
-  findOne(id: number): User | undefined {
-    return this.users.find((user) => user.id === id);
+  // 根据ID查询单个文档
+  findOne(id: number): Promise<User | null> {
+    return this.userModel.findById(id).exec();
   }
 
-  create(user: Omit<User, 'id'>): User {
-    const newUser: User = {
-      id: this.users.length + 1,
-      ...user,
-    };
-    console.log(newUser);
-    this.users.push(newUser);
-    return newUser;
+  // 创建单个文档
+  async create(createUserDto: CreateUserDto): Promise<User> {
+    return this.userModel.create(createUserDto);
   }
 
-  update(id: number, user: Omit<User, 'id'>): User {
-    const index = this.users.findIndex((user) => user.id === id);
-    if (index === -1) {
-      throw new Error(`User with ID ${id} not found`);
-    }
-    const updatedUser: User = {
-      id,
-      ...user,
-    };
-    this.users[index] = updatedUser;
-    return updatedUser;
+  // 根据邮箱查询单个文档
+  async findByEmail(email: string): Promise<User | null> {
+    return this.userModel.findOne({ email }).exec();
   }
 
-  remove(id: number): boolean {
-    const index = this.users.findIndex((user) => user.id === id);
-    if (index === -1) {
-      return false;
-    }
-    this.users.splice(index, 1);
-    return true;
+  // 根据ID查询单个文档
+  async findById(id: string): Promise<User | null> {
+    return this.userModel.findById(id).exec();
+  }
+
+  // 更新单个文档
+  async update(id: string, updateUserDto: CreateUserDto): Promise<User | null> {
+    // { new: true } 选项返回更新后的文档
+    return this.userModel
+      .findByIdAndUpdate(id, updateUserDto, { new: true })
+      .exec();
+  }
+
+  // 删除单个文档
+  async remove(id: string): Promise<User | null> {
+    return this.userModel.findByIdAndDelete(id).exec();
   }
 }

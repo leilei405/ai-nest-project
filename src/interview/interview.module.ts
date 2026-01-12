@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { InterviewService } from './interview.service';
+import { UserModule } from 'src/user/user.module';
 
 @Module({
-  imports: [], // 导入其他模块
+  imports: [UserModule], // 导入 UserModule 以使用 UserService
   providers: [InterviewService], // 提供InterviewService，使其他模块可以注入使用
   exports: [InterviewService], // 导出InterviewService，使其他模块可以注入使用
 })
